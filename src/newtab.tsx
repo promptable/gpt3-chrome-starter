@@ -1,24 +1,11 @@
 import { useState } from "react"
 
 import "./style.css"
+import IndexPopup from "./popup";
 
+// Temp new tab page.
 function IndexNewtab() {
-  const [data, setData] = useState("")
-
-  return (
-    <div
-      className="new-tab"
-      style={{
-        padding: 16,
-        display: "flex",
-        flexDirection: "column"
-      }}>
-      <h1>
-        Welcome to your <a href="https://www.plasmo.com">Plasmo</a> Extension!
-      </h1>
-      <input onChange={(e) => setData(e.target.value)} value={data} />
-    </div>
-  )
+  return <IndexPopup />
 }
 
 export default IndexNewtab
