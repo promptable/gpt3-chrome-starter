@@ -25,7 +25,8 @@ function IndexPopup() {
       style={{
         display: "flex",
         flexDirection: "column",
-        padding: "0px"
+        padding: "0px",
+        width: "500px"
       }}>
       <h1>
         GPT Chrome Starter
@@ -44,11 +45,15 @@ function IndexPopup() {
         }}
         >
         <h2>Input:</h2>
-        <textarea onChange={(e) => setText(e.target.value)} value={text} rows={6}/>
+        <textarea onChange={(e) => setText(e.target.value)} value={text} rows={6} style={{
+          resize: "vertical"
+        }}/>
         <button onClick={handleClick}>Run</button>
 
         <h2>Output:</h2>
-        <textarea value={completion} rows={6} />
+        <textarea value={completion} rows={6} style={{
+          resize: "vertical"
+        }}/>
       </div>
     </div>
   )
