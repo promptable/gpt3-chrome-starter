@@ -48,7 +48,15 @@ function IndexPopup() {
         <textarea onChange={(e) => setText(e.target.value)} value={text} rows={6} style={{
           resize: "vertical"
         }}/>
-        <button onClick={handleClick}>Run</button>
+
+        <button onClick={handleClick} style={{
+          backgroundColor: "#ee7788",
+          padding: "12px",
+          margin: "6px 0",
+          fontSize: "20px",
+          border: "none",
+          cursor: "pointer",
+        }}>Run!</button>
 
         <h2>Output:</h2>
         <textarea value={completion} rows={6} style={{
