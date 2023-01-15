@@ -27,12 +27,15 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "https://*/*",
+      "https://api.openai.com/v1/completions"
     ],
     "permissions": [
+      "api.openai.com",
       "activeTab",
       "tabs",
-      "storage"
+      "storage",
+      "clipboardWrite"
     ]
   }
 }

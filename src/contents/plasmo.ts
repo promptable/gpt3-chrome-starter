@@ -2,47 +2,103 @@ import type { PlasmoContentScript } from "plasmo"
 
 import { sendToBackground } from "@plasmohq/messaging"
 
+//@ts-ignore
+window.AbortController = AbortController
+
+//@ts-ignore
+window.fetch = fetch
+
 export const config: PlasmoContentScript = {
   matches: ["<all_urls>"]
 }
 
-const runCompletion = async (prompt: string) => {
-  console.log("Sending bg completion req", prompt)
-  try {
-    const resp = await sendToBackground({
-      name: "completion",
-      body: {
-        prompt
-      }
-    })
-
-    return resp
-  } catch (e) {
-    console.error(e)
-    throw e
+function insertTextAtCaret(text) {
+  let range: Range
+  let sel: Selection
+  if (window.getSelection) {
+    console.log("get select")
+    sel = window.getSelection()
+    if (sel.getRangeAt && sel.rangeCount) {
+      console.log("get range at")
+      range = sel.getRangeAt(0)
+      const prevText = sel.anchorNode.textContent
+      console.log("insert text at caret")
+      range.insertNode(document.createTextNode(text))
+    }
+    //@ts-ignore
+  } else if (document.selection && document.selection.createRange) {
+    console.log("create range")
+    //@ts-ignore
+    document.selection.createRange().text = text
   }
 }
 
-function updateDOMWithCompletion(text) {
-  console.log("updating DOM with completion text: '", text, "'");
-  let activeElement = document.activeElement;
+const handleCompletionMessage = (msg: any) => {
+  console.log("Handling completion message")
+  updateDOMWithCompletion(msg.completion)
+}
 
-  if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
-      // Use the value property for input and textarea elements
-      console.log("existing text", activeElement.value)
-      activeElement.value += text;
+var port = chrome.runtime.connect({ name: "completion" })
+port.onMessage.addListener(handleCompletionMessage)
+
+const streamCompletion = (prompt: string) => {
+  port.postMessage({ type: "completion", prompt })
+}
+
+function updateDOMWithCompletion(text) {
+  console.log("updating DOM with completion text: '", text, "'")
+
+  navigator.clipboard.writeText(text)
+
+  let activeElement = document.activeElement
+  //@ts-ignore
+  // activeElement.select()
+  // document.execCommand("paste")
+
+  if (
+    activeElement instanceof HTMLInputElement ||
+    activeElement instanceof HTMLTextAreaElement
+  ) {
+    activeElement.select()
+    // Use the value property for input and textarea elements
+    console.log("BG existing text", activeElement.value)
+    // Insert after selection
+    activeElement.value =
+      activeElement.value.slice(0, activeElement.selectionEnd) +
+      `\n\n${text}` +
+      activeElement.value.slice(
+        activeElement.selectionEnd,
+        //@ts-ignore
+        activeElement.length
+      )
   } else if (activeElement.hasAttribute("contenteditable")) {
-      // Use the innerHTML property for elements with contenteditable attribute
-      console.log("existing text", activeElement.innerHTML)
-      activeElement.innerHTML += text;
+    //@ts-ignore
+    console.log("CE contenteditable")
+    activeElement.innerHTML += text
+    // insertTextAtCaret(text)
+    // // Special handling for contenteditable
+    // const replyNode = document.createTextNode(`${text}`)
+    // const selection = window.getSelection()
+
+    // if (selection.rangeCount === 0) {
+    //   selection.addRange(document.createRange())
+    //   //@ts-ignore
+    //   selection.getRangeAt(0).collapse(activeElement, 1)
+    // }
+
+    // const range = selection.getRangeAt(0)
+    // range.collapse(false)
+
+    // // Insert reply
+    // range.insertNode(replyNode)
+
+    // // Move the cursor to the end
+    // selection.collapse(replyNode, replyNode.length)
   }
 }
 
 const completeText = async (prompt) => {
-  console.log("OpenAI complete text triggered");
-  const completionText = await runCompletion(prompt)
-      updateDOMWithCompletion(completionText);
-      console.log("Completion text", completionText);
+  streamCompletion(prompt)
 }
 
 document.addEventListener("keydown", async (event) => {
@@ -61,21 +117,23 @@ document.addEventListener("keydown", async (event) => {
 
     console.log("About to run a completion on website: ", domain)
 
+    const text = document.getSelection().toString().trim()
+    console.log("About to run a completion on website: ", domain)
 
-      const text = document.getSelection().toString().trim()
-    console.log("About to run a completion on website: ", domain);
-
-    let activeElement = document.activeElement;
-    let prompt = "";
-    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
-        // Use the value property for input and textarea elements
-        prompt = activeElement.value;
+    let activeElement = document.activeElement
+    let prompt = ""
+    if (
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement
+    ) {
+      // Use the value property for input and textarea elements
+      prompt = activeElement.value
     } else if (activeElement.hasAttribute("contenteditable")) {
-        // Use the innerHTML property for elements with contenteditable attribute
-        prompt = activeElement.innerHTML;
+      // Use the innerHTML property for elements with contenteditable attribute
+      prompt = activeElement.innerHTML
     }
-    
+
     console.log("Prompt: ", prompt)
-    completeText(prompt);
+    completeText(prompt)
   }
 })

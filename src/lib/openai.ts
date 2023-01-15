@@ -1,5 +1,3 @@
-import axios from "axios"
-
 export const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 export const runCompletion = async ({
@@ -30,4 +28,16 @@ export const runCompletion = async ({
   } catch (e) {
     console.error(e)
   }
+}
+
+export const streamCompletion = async (args: {
+  data: {
+    prompt: string
+    config: any
+  }
+  onMessage: (completion: string) => void
+  onError: (err: string) => void
+  onClose: () => void
+}) => {
+  const { data, onMessage, onClose } = args
 }
