@@ -1,3 +1,7 @@
+# GOTCHAS
+
+if you update the content script, you might need to refresh the extension in the chrome 'manage extensions' page
+
 # Environment
 
 add the following to `.env.local`
