@@ -1,3 +1,4 @@
+import copy from "copy-to-clipboard"
 import type { PlasmoContentScript } from "plasmo"
 
 import { sendToBackground } from "@plasmohq/messaging"
@@ -42,13 +43,23 @@ var port = chrome.runtime.connect({ name: "completion" })
 port.onMessage.addListener(handleCompletionMessage)
 
 const streamCompletion = (prompt: string) => {
+  showLoadingCursor()
   port.postMessage({ type: "completion", prompt })
+}
+
+const showLoadingCursor = () => {
+  const style = document.createElement("style")
+  style.id = "cursor_wait"
+  style.innerHTML = `* {cursor: wait;}`
+  document.head.insertBefore(style, null)
+}
+
+const restoreCursor = () => {
+  document.getElementById("cursor_wait").remove()
 }
 
 function updateDOMWithCompletion(text) {
   console.log("updating DOM with completion text: '", text, "'")
-
-  navigator.clipboard.writeText(text)
 
   let activeElement = document.activeElement
   //@ts-ignore
@@ -65,36 +76,34 @@ function updateDOMWithCompletion(text) {
     // Insert after selection
     activeElement.value =
       activeElement.value.slice(0, activeElement.selectionEnd) +
-      `\n\n${text}` +
+      text +
       activeElement.value.slice(
         activeElement.selectionEnd,
         //@ts-ignore
         activeElement.length
       )
   } else if (activeElement.hasAttribute("contenteditable")) {
-    //@ts-ignore
-    console.log("CE contenteditable")
-    activeElement.innerHTML += text
-    // insertTextAtCaret(text)
-    // // Special handling for contenteditable
-    // const replyNode = document.createTextNode(`${text}`)
-    // const selection = window.getSelection()
+    // Special handling for contenteditable
+    const replyNode = document.createTextNode(text)
+    let selection = window.getSelection()
 
-    // if (selection.rangeCount === 0) {
-    //   selection.addRange(document.createRange())
-    //   //@ts-ignore
-    //   selection.getRangeAt(0).collapse(activeElement, 1)
-    // }
+    if (selection.rangeCount === 0) {
+      selection.addRange(document.createRange())
+      //@ts-ignore
+      selection.getRangeAt(0).collapse(activeElement, 1)
+    }
 
-    // const range = selection.getRangeAt(0)
-    // range.collapse(false)
+    const range = selection.getRangeAt(0)
+    range.collapse(false)
 
-    // // Insert reply
-    // range.insertNode(replyNode)
+    // Insert reply
+    range.insertNode(replyNode)
 
-    // // Move the cursor to the end
-    // selection.collapse(replyNode, replyNode.length)
+    selection = document.getSelection()
+    // Move the cursor to the end
+    selection.collapse(replyNode, replyNode.length)
   }
+  restoreCursor()
 }
 
 const completeText = async (prompt) => {
@@ -102,6 +111,12 @@ const completeText = async (prompt) => {
 }
 
 document.addEventListener("keydown", async (event) => {
+  if (event.key === "m" && event.metaKey) {
+    event.preventDefault()
+    const text = document.getSelection().toString().trim()
+    copy(text)
+  }
+
   // Check if the 'ctrl', 'shift' & '.' (Ctrl + >) keys were pressed to trigger the extension
   if (
     (event.ctrlKey &&
@@ -115,9 +130,6 @@ document.addEventListener("keydown", async (event) => {
     // First get the domain name of the current page
     const domain = window.location.hostname
 
-    console.log("About to run a completion on website: ", domain)
-
-    const text = document.getSelection().toString().trim()
     console.log("About to run a completion on website: ", domain)
 
     let activeElement = document.activeElement
