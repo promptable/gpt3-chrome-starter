@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@plasmohq/messaging': ^0.0.2
   '@plasmohq/prettier-plugin-sort-imports': 3.6.1
   '@types/chrome': 0.0.208
   '@types/node': 18.11.18
@@ -14,6 +15,7 @@ specifiers:
   typescript: 4.9.4
 
 dependencies:
+  '@plasmohq/messaging': 0.0.2_react@18.2.0
   axios: 1.2.2
   plasmo: 0.62.2_biqbaboplfbrettd7655fr4n2y
   react: 18.2.0
@@ -1587,6 +1589,18 @@ packages:
 
   /@plasmohq/init/0.5.3:
     resolution: {integrity: sha512-LA6dfrBsLSgdOhgLJr8asBcs6gQd9ehb436DU2c1XecjYEmh5vkEr/YjxyECOg7Iz/AdtfUuBXEjH3GGS6qOMg==}
+    dev: false
+
+  /@plasmohq/messaging/0.0.2_react@18.2.0:
+    resolution: {integrity: sha512-dM4dCfOKnIoMXkzG2N+IKCi+b/YFa6tpEZjMf4R8N5xWILI3Xwu2UMLz+TRRrc4XLJvVpFdL09IeGDh14E+Fvg==}
+    peerDependencies:
+      react: ^16.8.6 || ^17 || ^18
+    peerDependenciesMeta:
+      react:
+        optional: true
+    dependencies:
+      react: 18.2.0
+      webextension-polyfill: 0.10.0
     dev: false
 
   /@plasmohq/parcel-bundler/0.4.5:
@@ -5079,6 +5093,10 @@ packages:
 
   /weak-lru-cache/1.2.2:
     resolution: {integrity: sha512-DEAoo25RfSYMuTGc9vPJzZcZullwIqRDSI9LOy+fkCJPi6hykCnfKaXTuPBDuXAUcqHXyOgFtHNp/kB2FjYHbw==}
+    dev: false
+
+  /webextension-polyfill/0.10.0:
+    resolution: {integrity: sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==}
     dev: false
 
   /webidl-conversions/4.0.2:
