@@ -30,12 +30,9 @@
       "https://*/*"
     ],
     "permissions": [
-<<<<<<< HEAD
       "activeTab",
-      "tabs"
-=======
-      "tabs", "storage"
->>>>>>> 1a357dc959d388e66abfc47972837b974ed603f7
+      "tabs",
+      "storage"
     ]
   }
 }
