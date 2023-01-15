@@ -4,7 +4,7 @@ console.log("HELLO WORLD FROM BGSCRIPTS")
 chrome.runtime.onInstalled.addListener((reason) => {
     // Set default preferences
     chrome.storage.sync.set({
-      API_KEY: "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"
+      API_KEY: process.env.OPENAI_API_KEY
     });
   });
   
