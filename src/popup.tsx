@@ -36,7 +36,13 @@ function IndexPopup() {
           display: "flex",
           flexDirection: "column",
           padding: "10px"
-        }}>
+        }}
+        onKeyDown={(e) => {
+          if (e.code === "Enter") {
+            handleClick();
+          }
+        }}
+        >
         <input onChange={(e) => setText(e.target.value)} value={text} />
         <button onClick={handleClick}>Run</button>
         <textarea value={completion} />
