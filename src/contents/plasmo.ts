@@ -26,9 +26,11 @@ function updateDOMWithCompletion(text) {
 
   if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
       // Use the value property for input and textarea elements
+      console.log("existing text", activeElement.value)
       activeElement.value += text;
   } else if (activeElement.hasAttribute("contenteditable")) {
       // Use the innerHTML property for elements with contenteditable attribute
+      console.log("existing text", activeElement.innerHTML)
       activeElement.innerHTML += text;
   }
 }
@@ -36,31 +38,29 @@ function updateDOMWithCompletion(text) {
 
 function openaiCompleteText(prompt) {
   console.log("OpenAI complete text triggered");
-  const completionText = "This is your completion!";  //response.choices[0].text
-  updateDOMWithCompletion(completionText);
-  // chrome.runtime.sendMessage(
-  //   {
-  //     function: "complete",
-  //     prompt: prompt,
-  //   },
-  //   function (response) {
-  //     if (response["error"]) {
-  //       console.log(response["error"]);
-  //       // mediumStatusUpdate("error");
-  //     } else {
-  //       console.log("Response received successfully");
-  //       // 
-  //       const completionText = "This s your completion!"  //response.choices[0].text
-  //       updateDOMWithCompletion(completionText);
-  //     }
-  //   }
-  // );
+  chrome.runtime.sendMessage(
+    {
+      function: "complete",
+      prompt: prompt,
+    },
+    function (response) {
+      if (response["error"]) {
+        console.log(response["error"]);
+        // mediumStatusUpdate("error");
+      } else {
+        console.log("Response received successfully");
+        const completionText = response.choices[0].text
+        console.log("Completion text", completionText);
+        updateDOMWithCompletion(completionText);
+      }
+    }
+  );
 }
 
 window.addEventListener("load", () => {
   console.log("content script loaded");
 
-  // document.body.style.background = "pink"
+  document.body.style.background = "pink"
 })
 
 
@@ -74,12 +74,18 @@ document.addEventListener("keydown", function (event) {
     const domain = window.location.hostname;
 
     console.log("About to run a completion on website: ", domain);
-    
-    openaiCompleteText("Hello world.");
 
-    // Next, call domain specific prompt generators
-    // if (domain === "medium.com") {
-    //   triggerMediumAssist(event);
-    // }
+    let activeElement = document.activeElement;
+    let prompt = "";
+    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+        // Use the value property for input and textarea elements
+        prompt = activeElement.value;
+    } else if (activeElement.hasAttribute("contenteditable")) {
+        // Use the innerHTML property for elements with contenteditable attribute
+        prompt = activeElement.innerHTML;
+    }
+    
+    console.log("Prompt: ", prompt)
+    openaiCompleteText(prompt);
   }
 });
