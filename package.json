@@ -30,6 +30,7 @@
       "https://*/*"
     ],
     "permissions": [
+      "activeTab",
       "tabs"
     ]
   }
