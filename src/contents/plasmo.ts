@@ -23,10 +23,27 @@ const runCompletion = async (prompt: string) => {
   }
 }
 
-window.addEventListener("load", () => {
-  console.log("content script loaded")
-  // document.body.style.background = "pink"
-})
+function updateDOMWithCompletion(text) {
+  console.log("updating DOM with completion text: '", text, "'");
+  let activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+      // Use the value property for input and textarea elements
+      console.log("existing text", activeElement.value)
+      activeElement.value += text;
+  } else if (activeElement.hasAttribute("contenteditable")) {
+      // Use the innerHTML property for elements with contenteditable attribute
+      console.log("existing text", activeElement.innerHTML)
+      activeElement.innerHTML += text;
+  }
+}
+
+const completeText = async (prompt) => {
+  console.log("OpenAI complete text triggered");
+  const completionText = await runCompletion(prompt)
+      updateDOMWithCompletion(completionText);
+      console.log("Completion text", completionText);
+}
 
 document.addEventListener("keydown", async (event) => {
   // Check if the 'ctrl', 'shift' & '.' (Ctrl + >) keys were pressed to trigger the extension
@@ -44,41 +61,21 @@ document.addEventListener("keydown", async (event) => {
 
     console.log("About to run a completion on website: ", domain)
 
-    const isContentEditableInputOrTextarea =
-      document.activeElement &&
-      (document.activeElement.hasAttribute("contenteditable") ||
-        document.activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
-        document.activeElement.nodeName.toUpperCase() === "INPUT")
 
-    if (isContentEditableInputOrTextarea) {
-      // Set as original for later
-      const originalActiveElement = document.activeElement
-
-      // Use selected text or all text in the input
-      const text =
-        document.getSelection().toString().trim() ||
-        document.activeElement.textContent.trim()
-
-      try {
-        const completion = await runCompletion(text)
-
-        // Append the completion
-        if (
-          document.activeElement instanceof HTMLInputElement ||
-          document.activeElement instanceof HTMLTextAreaElement
-        ) {
-          // Use the value property for input and textarea elements
-          document.activeElement.value += completion
-        } else if (document.activeElement.hasAttribute("contenteditable")) {
-          // Use the innerHTML property for elements with contenteditable attribute
-          document.activeElement.innerHTML += completion
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    } else {
-      // If no active text input use any selected text on page
       const text = document.getSelection().toString().trim()
+    console.log("About to run a completion on website: ", domain);
+
+    let activeElement = document.activeElement;
+    let prompt = "";
+    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+        // Use the value property for input and textarea elements
+        prompt = activeElement.value;
+    } else if (activeElement.hasAttribute("contenteditable")) {
+        // Use the innerHTML property for elements with contenteditable attribute
+        prompt = activeElement.innerHTML;
     }
+    
+    console.log("Prompt: ", prompt)
+    completeText(prompt);
   }
 })
