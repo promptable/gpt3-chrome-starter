@@ -1,0 +1,13 @@
+.hw-top {
+    background: red;
+    color: white;
+  }
+  
+  #plasmo-shadow-container {
+    width: 200px;
+    background-color: purple;
+  }
+  
+  #plasmo-mount-container {
+    border: 8px solid aqua;
+  }

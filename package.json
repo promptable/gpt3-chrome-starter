@@ -37,6 +37,19 @@
       "tabs",
       "storage",
       "clipboardWrite"
-    ]
+    ],
+    "browser_action": {
+      "default_popup": "popup.html"
+    },
+    "commands": {
+      "_execute_browser_action": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+E",
+          "linux": "Ctrl+Shift+K",
+          "windows": "Alt+Shift+P",
+          "mac": "Alt+Shift+P"
+        }
+      }
+    }
   }
 }
