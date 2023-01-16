@@ -152,7 +152,14 @@ const PlasmoOverlay = () => {
           padding: 10
         }}
       />
-
+      <div
+        style={{
+          fontWeight: "bold",
+          fontSize: "20px",
+          padding: "10px"
+        }}>
+        Nen
+      </div>
       <div
         style={{
           flexGrow: 1,
