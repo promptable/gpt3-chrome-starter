@@ -178,6 +178,7 @@ const PlasmoOverlay = () => {
         onChange={handlePromptChange}
         autoFocus
         style={{
+          backgroundColor: "inherit",
           fontSize: "20px",
           padding: 10
         }}
@@ -193,7 +194,16 @@ const PlasmoOverlay = () => {
             }}>
             Your selected context:
           </div>
-          <p>{context}</p>
+          <p
+            style={{
+              flexGrow: 1,
+              height: "1px",
+              overflowY: "auto",
+              paddingTop: "5px",
+              width: "100%"
+            }}>
+            {context}
+          </p>
         </div>
       )}
       <div
