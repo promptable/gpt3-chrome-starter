@@ -7,6 +7,7 @@ import { runCompletion, streamCompletion } from "~lib/openai"
 
 export const config: PlasmoContentScript = {
   matches: ["https://*/*"]
+  // font: ["font.css"]
 }
 
 export const getStyle = () => {
@@ -163,9 +164,9 @@ const PlasmoOverlay = () => {
         flexDirection: "column",
         padding: 12,
         position: "absolute",
-        left: "50px",
-        top: "100px",
-        width: "700px",
+        left: "50%",
+        transform: "translate(50%,20%)",
+        width: "600px",
         height: "400px",
         borderRadius: "20px",
         wordBreak: "break-all",
@@ -184,7 +185,7 @@ const PlasmoOverlay = () => {
         }}
       />
       {!!context.length && (
-        <div>
+        <>
           <div
             style={{
               paddingTop: "10px",
@@ -194,17 +195,21 @@ const PlasmoOverlay = () => {
             }}>
             Your selected context:
           </div>
-          <p
+          <div
             style={{
               flexGrow: 1,
               height: "1px",
-              overflowY: "auto",
-              paddingTop: "5px",
-              width: "100%"
+              overflowY: "auto"
             }}>
-            {context}
-          </p>
-        </div>
+            <p
+              style={{
+                width: "100%",
+                color: "black"
+              }}>
+              {context}
+            </p>
+          </div>
+        </>
       )}
       <div
         style={{

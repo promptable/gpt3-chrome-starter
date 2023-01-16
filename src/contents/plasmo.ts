@@ -140,7 +140,7 @@ const completeText = async (prompt, completionType) => {
   if (completionType === "completion") {
     streamCompletion(prompt)
   } else {
-    showLoadingCursor();
+    showLoadingCursor()
     try {
       console.log("Running basic completion")
       chrome.runtime.sendMessage(
@@ -152,13 +152,13 @@ const completeText = async (prompt, completionType) => {
           if (response["error"]) {
             console.log(response["error"])
             // mediumStatusUpdate("error");
-            restoreCursor();
+            restoreCursor()
           } else {
             console.log("Response received successfully")
             const completionText = response.choices[0].text
             console.log("Basic Completion text: ", completionText)
-            updateDOMWithCompletion(completionText);
-            restoreCursor();
+            updateDOMWithCompletion(completionText)
+            restoreCursor()
           }
         }
       )
