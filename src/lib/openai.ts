@@ -51,6 +51,8 @@ export const streamCompletion = async (args: {
     stream: true
   }
 
+  console.log("STREAMING WITH PYLOADl", payload)
+
   const res = await fetch("https://api.openai.com/v1/completions", {
     headers: {
       "Content-Type": "application/json",

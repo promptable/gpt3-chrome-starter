@@ -18,27 +18,6 @@ export const getStyle = () => {
 const PlasmoOverlay = () => {
   const [show, setShow] = useState(false)
 
-  useEffect(() => {
-    const handleToggleOverlay = (e) => {
-      if (e.key === "." && e.metaKey) {
-        console.log("click")
-        e.preventDefault()
-        setShow((p) => !p)
-      }
-
-      if (e.key === "Enter" && e.metaKey) {
-        console.log("click")
-        runComp()
-      }
-    }
-
-    addEventListener("keydown", handleToggleOverlay)
-
-    return () => {
-      removeEventListener("keydown", handleToggleOverlay)
-    }
-  }, [])
-
   const handleClickAway = () => {
     setShow(false)
   }
@@ -65,8 +44,6 @@ const PlasmoOverlay = () => {
   const [prompt, setPrompt] = useState("")
 
   const handlePromptChange = (e) => {
-    console.log("setting val", e.target.value)
-    console.log("setting val", e.currentTarget.value)
     setPrompt(e.target.value)
   }
 
@@ -85,20 +62,39 @@ const PlasmoOverlay = () => {
 
   const [stream, setStream] = useState(true)
 
-  const runComp = async () => {
+  useEffect(() => {
+    const handleToggleOverlay = (e) => {
+      if (e.key === "." && e.metaKey) {
+        e.preventDefault()
+        setShow((p) => !p)
+      }
+
+      if (e.key === "Enter" && e.metaKey) {
+        handleRun(prompt)
+      }
+    }
+
+    addEventListener("keydown", handleToggleOverlay)
+
+    return () => {
+      removeEventListener("keydown", handleToggleOverlay)
+    }
+  }, [prompt])
+
+  const handleRun = async (p: string) => {
+    setCompletion("")
     if (!stream) {
       const res = await runCompletion({
-        prompt,
+        prompt: p,
         config: {
           model: "text-davinci-003"
         }
       })
-      console.log("got res", res)
       setCompletion(res)
     } else {
       streamCompletion({
         data: {
-          prompt,
+          prompt: p,
           config: {
             model: "text-davinci-003"
           }
@@ -123,7 +119,10 @@ const PlasmoOverlay = () => {
       }}>
       <input value={prompt} onChange={handlePromptChange} />
       <button onClick={handleCopy}>Copy</button>
-      <button onClick={runComp}>run</button>
+      <button onClick={() => handleRun(prompt)}>Run</button>
+      <button onClick={() => setStream((p) => !p)}>
+        {stream ? "Streaming On" : "Streaming Off"}
+      </button>
       <div>{completion}</div>
     </div>
   ) : null
