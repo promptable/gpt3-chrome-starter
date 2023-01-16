@@ -43,7 +43,6 @@ var port = chrome.runtime.connect({ name: "completion" })
 port.onMessage.addListener(handleCompletionMessage)
 
 const streamCompletion = (prompt: string) => {
-  // showLoadingCursor()
   port.postMessage({ type: "completion", prompt })
 }
 
@@ -97,13 +96,17 @@ export const updateDOMWithCompletion = async (text) => {
 
     await wait(1)
 
-    const displayText = existingText.concat(text)
-    console.log("ContentEditable - Display text: ", displayText)
+    // const displayText = existingText.concat(text)
+    // console.log("ContentEditable - Display text: ", displayText)
+    // try {
+    //   document.execCommand("selectAll")
+    // } catch (e) {}
+    // try {
+    //   document.execCommand("insertHTML", false, displayText)
+    // } catch (e) {}
+
     try {
-      document.execCommand("selectAll")
-    } catch (e) {}
-    try {
-      document.execCommand("insertHTML", false, displayText)
+      document.execCommand("insertHTML", false, text)
     } catch (e) {}
 
     // CODE BELOW:
@@ -137,24 +140,29 @@ const completeText = async (prompt, completionType) => {
   if (completionType === "completion") {
     streamCompletion(prompt)
   } else {
-    console.log("Running basic completion")
-    chrome.runtime.sendMessage(
-      {
-        type: "basic_completion",
-        prompt: prompt
-      },
-      function (response) {
-        if (response["error"]) {
-          console.log(response["error"])
-          // mediumStatusUpdate("error");
-        } else {
-          console.log("Response received successfully")
-          const completionText = response.choices[0].text
-          console.log("Basic Completion text: ", completionText)
-          updateDOMWithCompletion(completionText)
+    showLoadingCursor();
+    try {
+      console.log("Running basic completion")
+      chrome.runtime.sendMessage(
+        {
+          type: "basic_completion",
+          prompt: prompt
+        },
+        function (response) {
+          if (response["error"]) {
+            console.log(response["error"])
+            // mediumStatusUpdate("error");
+            restoreCursor();
+          } else {
+            console.log("Response received successfully")
+            const completionText = response.choices[0].text
+            console.log("Basic Completion text: ", completionText)
+            updateDOMWithCompletion(completionText);
+            restoreCursor();
+          }
         }
-      }
-    )
+      )
+    } catch {}
   }
 }
 
