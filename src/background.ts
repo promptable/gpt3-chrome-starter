@@ -6,37 +6,41 @@ chrome.runtime.onInstalled.addListener((reason) => {
   })
 })
 
-// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-//   // First get the API key from storage
-//   console.log("Received message", message)
-//   chrome.storage.sync.get(["API_KEY"], function (result) {
-//     const data = {
-//       model: "text-davinci-003",
-//       prompt: message["prompt"],
-//       max_tokens: 128,
-//       temperature: 0.7
-//     }
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  // First get the API key from storage
+  console.log("Received message", message)
+  if (message.type !== "basic_completion") {
+    return;
+  }
+  console.log("Received basic completion request");
+  chrome.storage.sync.get(["API_KEY"], function (result) {
+    const data = {
+      model: "text-davinci-003",
+      prompt: message["prompt"],
+      max_tokens: 128,
+      temperature: 0.7
+    }
 
-//     fetch("https://api.openai.com/v1/completions", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Accept: "application/json",
-//         Authorization: "Bearer " + result.API_KEY
-//       },
-//       body: JSON.stringify(data)
-//     })
-//       .then((response) => response.json())
-//       .then((data) => {
-//         sendResponse(data)
-//       })
-//       .catch((error) => {
-//         console.error(error)
-//         sendResponse({ error: error })
-//       })
-//   })
-//   return true
-// })
+    fetch("https://api.openai.com/v1/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: "Bearer " + result.API_KEY
+      },
+      body: JSON.stringify(data)
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        sendResponse(data)
+      })
+      .catch((error) => {
+        console.error(error)
+        sendResponse({ error: error })
+      })
+  })
+  return true
+})
 
 chrome.runtime.onConnect.addListener(function (port) {
   // console.assert(port.name === "completion")
