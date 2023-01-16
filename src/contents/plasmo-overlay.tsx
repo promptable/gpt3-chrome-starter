@@ -17,12 +17,34 @@ export const getStyle = () => {
 
 const PlasmoOverlay = () => {
   const [show, setShow] = useState(false)
+  const [completion, setCompletion] = useState("")
+  const [prompt, setPrompt] = useState("")
+  const [stream, setStream] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const wrapperRef = useRef(null)
 
   const handleClickAway = () => {
     setShow(false)
   }
 
-  const wrapperRef = useRef(null)
+  const handlePromptChange = (e) => {
+    setPrompt(e.target.value)
+  }
+
+  const handleCopy = () => {
+    copy(completion)
+  }
+
+  const handleMessage = useCallback(
+    (msg) => {
+      setCompletion((p) => p + msg)
+    },
+    [setCompletion]
+  )
+
+  /**
+   * Close the overlay when you click outside of it
+   */
   useEffect(() => {
     /**
      * Alert if clicked on outside of element
@@ -41,27 +63,9 @@ const PlasmoOverlay = () => {
     }
   }, [])
 
-  const [prompt, setPrompt] = useState("")
-
-  const handlePromptChange = (e) => {
-    setPrompt(e.target.value)
-  }
-
-  const [completion, setCompletion] = useState("")
-
-  const handleCopy = () => {
-    copy(completion)
-  }
-
-  const handleMessage = useCallback(
-    (msg) => {
-      setCompletion((p) => p + msg)
-    },
-    [setCompletion]
-  )
-
-  const [stream, setStream] = useState(true)
-
+  /**
+   * Keybindings
+   */
   useEffect(() => {
     const handleToggleOverlay = (e) => {
       if (e.key === "." && e.metaKey) {
@@ -69,7 +73,7 @@ const PlasmoOverlay = () => {
         setShow((p) => !p)
       }
 
-      if (e.key === "Enter" && e.metaKey) {
+      if (show && !loading && e.key === "Enter") {
         handleRun(prompt)
       }
     }
@@ -79,9 +83,14 @@ const PlasmoOverlay = () => {
     return () => {
       removeEventListener("keydown", handleToggleOverlay)
     }
-  }, [prompt])
+  }, [prompt, show])
 
   const handleRun = async (p: string) => {
+    if (loading) {
+      return
+    }
+
+    setLoading(true)
     setCompletion("")
     if (!stream) {
       const res = await runCompletion({
@@ -91,6 +100,7 @@ const PlasmoOverlay = () => {
         }
       })
       setCompletion(res)
+      setLoading(false)
     } else {
       streamCompletion({
         data: {
@@ -100,8 +110,13 @@ const PlasmoOverlay = () => {
           }
         },
         onMessage: handleMessage,
-        onError: () => {},
-        onClose: () => {}
+        onError: (e) => {
+          console.error(e)
+          setLoading(false)
+        },
+        onClose: () => {
+          setLoading(false)
+        }
       })
     }
   }
@@ -111,19 +126,43 @@ const PlasmoOverlay = () => {
       ref={wrapperRef}
       className="hw-top"
       style={{
+        display: "flex",
+        flexDirection: "column",
         padding: 12,
         position: "absolute",
         left: "50px",
-        width: "500px",
-        height: "500px"
+        top: "100px",
+        width: "700px",
+        height: "400px",
+        borderRadius: "20px"
       }}>
-      <input value={prompt} onChange={handlePromptChange} />
-      <button onClick={handleCopy}>Copy</button>
-      <button onClick={() => handleRun(prompt)}>Run</button>
-      <button onClick={() => setStream((p) => !p)}>
-        {stream ? "Streaming On" : "Streaming Off"}
-      </button>
-      <div>{completion}</div>
+      <input
+        placeholder="Ask FullMetal. What to do?"
+        value={prompt}
+        onChange={handlePromptChange}
+        autoFocus
+        style={{
+          fontSize: "20px",
+          padding: 10
+        }}
+      />
+
+      <div
+        style={{
+          flexGrow: 1,
+          height: "1px",
+          overflowY: "auto",
+          padding: "5px"
+        }}>
+        {completion}
+      </div>
+      <div>
+        <button onClick={handleCopy}>Copy</button>
+        <button onClick={() => handleRun(prompt)}>Run</button>
+        <button onClick={() => setStream((p) => !p)}>
+          {stream ? "Streaming On" : "Streaming Off"}
+        </button>
+      </div>
     </div>
   ) : null
 }

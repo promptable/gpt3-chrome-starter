@@ -1,6 +1,7 @@
 .hw-top {
-    background: red;
-    color: white;
+    background: white;
+    color: black;
+    box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.4);
   }
   
   #plasmo-shadow-container {
