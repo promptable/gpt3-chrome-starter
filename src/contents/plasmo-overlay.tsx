@@ -12,17 +12,38 @@ export const getStyle = () => {
   return style
 }
 
-/**
- * Hook that alerts clicks outside of the passed ref
- */
-function useOutsideAlerter(ref) {
+const PlasmoOverlay = () => {
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    const handleToggleOverlay = (e) => {
+      if (e.key === "." && e.metaKey) {
+        console.log("click")
+        e.preventDefault()
+        setShow((p) => !p)
+      }
+    }
+
+    addEventListener("keydown", handleToggleOverlay)
+
+    return () => {
+      removeEventListener("keydown", handleToggleOverlay)
+    }
+  }, [])
+
+  const handleClickAway = () => {
+    setShow(false)
+  }
+
+  const wrapperRef = useRef(null)
   useEffect(() => {
     /**
      * Alert if clicked on outside of element
      */
-    function handleClickOutside(event) {
-      if (ref.current && !ref.current.contains(event.target)) {
-        alert("You clicked outside of me!")
+    const handleClickOutside = (event) => {
+      // NOTE: this is because the event.target === <plasmo-csui> shadow dom.
+      if (event.target.tagName !== "PLASMO-CSUI") {
+        handleClickAway()
       }
     }
     // Bind the event listener
@@ -31,46 +52,22 @@ function useOutsideAlerter(ref) {
       // Unbind the event listener on clean up
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [ref])
-}
-
-/**
- * Component that alerts if you click outside of it
- */
-export function OutsideAlerter(props) {
-  const wrapperRef = useRef(null)
-  useOutsideAlerter(wrapperRef)
-
-  return <div ref={wrapperRef}>{props.children}</div>
-}
-
-const PlasmoOverlay = () => {
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    addEventListener("keydown", (e) => {
-      if (e.key === "m" && e.metaKey) {
-        e.preventDefault()
-        setShow((p) => !p)
-      }
-    })
   }, [])
 
   return show ? (
-    <OutsideAlerter>
-      <span
-        className="hw-top"
-        style={{
-          opacity: "15%",
-          padding: 12,
-          position: "absolute",
-          left: "50px",
-          width: "500px",
-          height: "500px"
-        }}>
-        HELLO WORLD TOP
-      </span>
-    </OutsideAlerter>
+    <span
+      ref={wrapperRef}
+      className="hw-top"
+      style={{
+        opacity: "15%",
+        padding: 12,
+        position: "absolute",
+        left: "50px",
+        width: "500px",
+        height: "500px"
+      }}>
+      HELLO WORLD TOP
+    </span>
   ) : null
 }
 

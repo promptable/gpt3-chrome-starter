@@ -111,15 +111,6 @@ const completeText = async (prompt) => {
 }
 
 document.addEventListener("keydown", async (event) => {
-  if (event.metaKey && event.shiftKey && event.key === "m") {
-    console.log("OPENPOPUP")
-    event.preventDefault()
-    chrome.action
-    const text = document.getSelection().toString().trim()
-    copy(text)
-  }
-
-  console.log("Adding keydown")
   // Check if the 'ctrl', 'shift' & '.' (Ctrl + >) keys were pressed to trigger the extension
   if (
     (event.ctrlKey &&
