@@ -176,13 +176,17 @@ document.addEventListener("keydown", async (event) => {
 
     console.log("About to run a completion on website: ", domain)
 
-    let activeElement = document.activeElement;
-    console.log("activeElement", activeElement);
-    console.log("activeElement.value", activeElement.value);
-    console.log("document.getSelection().toString()", document.getSelection().toString());
-    console.log("activeElement.textContent", activeElement.textContent);
-    console.log("activeElement.innerHTML;", activeElement.innerHTML);
-    let prompt;
+    let activeElement = document.activeElement
+    console.log("activeElement", activeElement)
+    //@ts-ignore
+    console.log("activeElement.value", activeElement.value)
+    console.log(
+      "document.getSelection().toString()",
+      document.getSelection().toString()
+    )
+    console.log("activeElement.textContent", activeElement.textContent)
+    console.log("activeElement.innerHTML;", activeElement.innerHTML)
+    let prompt
     // If there's an active text input
     if (
       activeElement &&
@@ -194,7 +198,10 @@ document.addEventListener("keydown", async (event) => {
       // Use selected text or all text in the input
       prompt =
         document.getSelection().toString().trim() ||
-        activeElement.textContent.trim() || activeElement.value;
+        //@ts-ignore
+        activeElement.textContent.trim() ||
+        //@ts-ignore
+        activeElement.value
     } else {
       // If no active text input use any selected text on page
       prompt = document.getSelection().toString().trim()
