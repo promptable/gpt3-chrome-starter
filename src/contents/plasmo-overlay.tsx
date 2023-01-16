@@ -73,7 +73,13 @@ const PlasmoOverlay = () => {
         setShow((p) => !p)
       }
 
+      if (e.key === "Escape") {
+        e.preventDefault()
+        setShow(false)
+      }
+
       if (show && !loading && e.key === "Enter") {
+        e.preventDefault()
         handleRun(prompt)
       }
     }
