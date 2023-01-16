@@ -1,6 +1,9 @@
+import copy from "copy-to-clipboard"
 import cssText from "data-text:~/contents/plasmo-overlay.css"
 import type { PlasmoContentScript } from "plasmo"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+
+import { runCompletion, streamCompletion } from "~lib/openai"
 
 export const config: PlasmoContentScript = {
   matches: ["https://*/*"]
@@ -21,6 +24,11 @@ const PlasmoOverlay = () => {
         console.log("click")
         e.preventDefault()
         setShow((p) => !p)
+      }
+
+      if (e.key === "Enter" && e.metaKey) {
+        console.log("click")
+        runComp()
       }
     }
 
@@ -54,20 +62,70 @@ const PlasmoOverlay = () => {
     }
   }, [])
 
+  const [prompt, setPrompt] = useState("")
+
+  const handlePromptChange = (e) => {
+    console.log("setting val", e.target.value)
+    console.log("setting val", e.currentTarget.value)
+    setPrompt(e.target.value)
+  }
+
+  const [completion, setCompletion] = useState("")
+
+  const handleCopy = () => {
+    copy(completion)
+  }
+
+  const handleMessage = useCallback(
+    (msg) => {
+      setCompletion((p) => p + msg)
+    },
+    [setCompletion]
+  )
+
+  const [stream, setStream] = useState(true)
+
+  const runComp = async () => {
+    if (!stream) {
+      const res = await runCompletion({
+        prompt,
+        config: {
+          model: "text-davinci-003"
+        }
+      })
+      console.log("got res", res)
+      setCompletion(res)
+    } else {
+      streamCompletion({
+        data: {
+          prompt,
+          config: {
+            model: "text-davinci-003"
+          }
+        },
+        onMessage: handleMessage,
+        onError: () => {},
+        onClose: () => {}
+      })
+    }
+  }
+
   return show ? (
-    <span
+    <div
       ref={wrapperRef}
       className="hw-top"
       style={{
-        opacity: "15%",
         padding: 12,
         position: "absolute",
         left: "50px",
         width: "500px",
         height: "500px"
       }}>
-      HELLO WORLD TOP
-    </span>
+      <input value={prompt} onChange={handlePromptChange} />
+      <button onClick={handleCopy}>Copy</button>
+      <button onClick={runComp}>run</button>
+      <div>{completion}</div>
+    </div>
   ) : null
 }
 

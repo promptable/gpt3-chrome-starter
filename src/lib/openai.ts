@@ -1,3 +1,5 @@
+import { parseJsonSSE } from "~parseJSONSSE"
+
 export const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 export const runCompletion = async ({
@@ -40,4 +42,32 @@ export const streamCompletion = async (args: {
   onClose: () => void
 }) => {
   const { data, onMessage, onClose } = args
+
+  const payload = {
+    prompt: data.prompt,
+    model: "text-davinci-003",
+    max_tokens: 128,
+    temperature: 0.7,
+    stream: true
+  }
+
+  const res = await fetch("https://api.openai.com/v1/completions", {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`
+    },
+    method: "POST",
+    body: JSON.stringify(payload)
+  })
+
+  parseJsonSSE({
+    data: res.body,
+    onParse: (obj) => {
+      onMessage(
+        //@ts-ignore
+        obj.choices?.[0].text
+      )
+    },
+    onFinish: () => {}
+  })
 }

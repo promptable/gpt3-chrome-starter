@@ -47,10 +47,6 @@ const streamCompletion = (prompt: string) => {
   port.postMessage({ type: "completion", prompt })
 }
 
-
-
-
-
 const showLoadingCursor = () => {
   const style = document.createElement("style")
   style.id = "cursor_wait"
@@ -63,8 +59,8 @@ const restoreCursor = () => {
 }
 
 const wait = (timeout) => {
-  return new Promise((res) => setTimeout(() => res(null), timeout));
-};
+  return new Promise((res) => setTimeout(() => res(null), timeout))
+}
 
 export const updateDOMWithCompletion = async (text) => {
   console.log("updating DOM with completion text: '", text, "'")
@@ -92,17 +88,23 @@ export const updateDOMWithCompletion = async (text) => {
       )
   } else if (activeElement.hasAttribute("contenteditable")) {
     //@ts-ignore
-    activeElement.focus();
+    activeElement.focus()
 
-    const existingText = document.getSelection().toString().trim() || activeElement.textContent.trim();
-    console.log("ContentEditable - Existing text: ", existingText);
+    const existingText =
+      document.getSelection().toString().trim() ||
+      activeElement.textContent.trim()
+    console.log("ContentEditable - Existing text: ", existingText)
 
-    await wait(1);
-    
-    const displayText = existingText.concat(text);
-    console.log("ContentEditable - Display text: ", displayText);
-    try { document.execCommand('selectAll'); } catch(e) {}
-    try { document.execCommand('insertHTML', false, displayText); } catch(e) {}
+    await wait(1)
+
+    const displayText = existingText.concat(text)
+    console.log("ContentEditable - Display text: ", displayText)
+    try {
+      document.execCommand("selectAll")
+    } catch (e) {}
+    try {
+      document.execCommand("insertHTML", false, displayText)
+    } catch (e) {}
 
     // CODE BELOW:
     // This works sometimes, but less reliably than "insertHTML"
@@ -132,38 +134,36 @@ export const updateDOMWithCompletion = async (text) => {
 }
 
 const completeText = async (prompt, completionType) => {
-
   if (completionType === "completion") {
     streamCompletion(prompt)
   } else {
-    console.log("Running basic completion");
+    console.log("Running basic completion")
     chrome.runtime.sendMessage(
       {
         type: "basic_completion",
-        prompt: prompt,
+        prompt: prompt
       },
       function (response) {
         if (response["error"]) {
-          console.log(response["error"]);
+          console.log(response["error"])
           // mediumStatusUpdate("error");
         } else {
-          console.log("Response received successfully");
+          console.log("Response received successfully")
           const completionText = response.choices[0].text
-          console.log("Basic Completion text: ", completionText);
-          updateDOMWithCompletion(completionText);
+          console.log("Basic Completion text: ", completionText)
+          updateDOMWithCompletion(completionText)
         }
       }
-    );
+    )
   }
 }
 
 document.addEventListener("keydown", async (event) => {
   // Check if the 'ctrl', 'shift' & '.' (Ctrl + >) keys were pressed to trigger the extension
   if (
-    (event.ctrlKey &&
-      event.shiftKey &&
-      (event.key === "." || event.key === ">")) ||
-    (event.key === "Enter" && event.metaKey)
+    event.ctrlKey &&
+    event.shiftKey &&
+    (event.key === "." || event.key === ">")
   ) {
     // if (
     //   (event.metaKey && event.key === "m")
@@ -177,10 +177,11 @@ document.addEventListener("keydown", async (event) => {
     console.log("About to run a completion on website: ", domain)
 
     let activeElement = document.activeElement
-    let prompt;
+    let prompt
     // If there's an active text input
     if (
       activeElement &&
+      //@ts-ignore
       (activeElement.isContentEditable ||
         activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
         activeElement.nodeName.toUpperCase() === "INPUT")
@@ -188,22 +189,24 @@ document.addEventListener("keydown", async (event) => {
       // Use selected text or all text in the input
       prompt =
         document.getSelection().toString().trim() ||
-        activeElement.textContent.trim();
+        activeElement.textContent.trim()
     } else {
       // If no active text input use any selected text on page
-      prompt = document.getSelection().toString().trim();
+      prompt = document.getSelection().toString().trim()
     }
 
-    console.log("Prompt: ", prompt);
-  
+    console.log("Prompt: ", prompt)
+
     if (!prompt) {
-      alert("No text in active element.");
-      return;
+      alert("No text in active element.")
+      return
     }
 
-    const completionType = activeElement.isContentEditable ? "basic_completion" : "completion";
-    console.log("CompletionType: ", completionType);
+    //@ts-ignore
+    const completionType = activeElement.isContentEditable
+      ? "basic_completion"
+      : "completion"
+    console.log("CompletionType: ", completionType)
     completeText(prompt, completionType)
-    
   }
 })

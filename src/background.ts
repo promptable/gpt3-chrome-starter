@@ -1,3 +1,5 @@
+import { parseJsonSSE } from "~parseJSONSSE"
+
 // First, check to see if an OpenAI API key exists and if it is valid
 chrome.runtime.onInstalled.addListener((reason) => {
   // Set default preferences
@@ -10,9 +12,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   // First get the API key from storage
   console.log("Received message", message)
   if (message.type !== "basic_completion") {
-    return;
+    return
   }
-  console.log("Received basic completion request");
+  console.log("Received basic completion request")
   chrome.storage.sync.get(["API_KEY"], function (result) {
     const data = {
       model: "text-davinci-003",
@@ -80,44 +82,3 @@ chrome.runtime.onConnect.addListener(function (port) {
 })
 
 export {}
-
-const parseJsonSSE = async <T>({
-  data,
-  onParse,
-  onFinish
-}: {
-  data: ReadableStream
-  onParse: (object: T) => void
-  onFinish: () => void
-}) => {
-  const reader = data.getReader()
-  const decoder = new TextDecoder()
-
-  let done = false
-  let tempState = ""
-
-  while (!done) {
-    // eslint-disable-next-line no-await-in-loop
-    const { value, done: doneReading } = await reader.read()
-    done = doneReading
-    const newValue = decoder.decode(value).split("\n\n").filter(Boolean)
-
-    if (tempState) {
-      newValue[0] = tempState + newValue[0]
-      tempState = ""
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
-    newValue.forEach((newVal) => {
-      try {
-        const json = JSON.parse(newVal.replace("data: ", "")) as T
-
-        onParse(json)
-      } catch (error) {
-        tempState = newVal
-      }
-    })
-  }
-
-  onFinish()
-}
