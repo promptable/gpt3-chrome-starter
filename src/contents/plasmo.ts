@@ -43,9 +43,13 @@ var port = chrome.runtime.connect({ name: "completion" })
 port.onMessage.addListener(handleCompletionMessage)
 
 const streamCompletion = (prompt: string) => {
-  showLoadingCursor()
+  // showLoadingCursor()
   port.postMessage({ type: "completion", prompt })
 }
+
+
+
+
 
 const showLoadingCursor = () => {
   const style = document.createElement("style")
@@ -58,7 +62,11 @@ const restoreCursor = () => {
   document.getElementById("cursor_wait").remove()
 }
 
-function updateDOMWithCompletion(text) {
+const wait = (timeout) => {
+  return new Promise((res) => setTimeout(() => res(null), timeout));
+};
+
+export const updateDOMWithCompletion = async (text) => {
   console.log("updating DOM with completion text: '", text, "'")
 
   let activeElement = document.activeElement
@@ -70,9 +78,9 @@ function updateDOMWithCompletion(text) {
     activeElement instanceof HTMLInputElement ||
     activeElement instanceof HTMLTextAreaElement
   ) {
-    activeElement.select()
+    // activeElement.select()
     // Use the value property for input and textarea elements
-    console.log("BG existing text", activeElement.value)
+    console.log("TextArea - Existing text: ", activeElement.value)
     // Insert after selection
     activeElement.value =
       activeElement.value.slice(0, activeElement.selectionEnd) +
@@ -83,31 +91,70 @@ function updateDOMWithCompletion(text) {
         activeElement.length
       )
   } else if (activeElement.hasAttribute("contenteditable")) {
-    // Special handling for contenteditable
-    const replyNode = document.createTextNode(text)
-    let selection = window.getSelection()
+    //@ts-ignore
+    activeElement.focus();
 
-    if (selection.rangeCount === 0) {
-      selection.addRange(document.createRange())
-      //@ts-ignore
-      selection.getRangeAt(0).collapse(activeElement, 1)
-    }
+    const existingText = document.getSelection().toString().trim() || activeElement.textContent.trim();
+    console.log("ContentEditable - Existing text: ", existingText);
 
-    const range = selection.getRangeAt(0)
-    range.collapse(false)
+    await wait(1);
+    
+    const displayText = existingText.concat(text);
+    console.log("ContentEditable - Display text: ", displayText);
+    try { document.execCommand('selectAll'); } catch(e) {}
+    try { document.execCommand('insertHTML', false, displayText); } catch(e) {}
 
-    // Insert reply
-    range.insertNode(replyNode)
+    // CODE BELOW:
+    // This works sometimes, but less reliably than "insertHTML"
 
-    selection = document.getSelection()
-    // Move the cursor to the end
-    selection.collapse(replyNode, replyNode.length)
+    // document.execCommand('insertHTML', false, text);
+    // // Special handling for contenteditable
+    // const replyNode = document.createTextNode(text)
+    // let selection = window.getSelection()
+
+    // if (selection.rangeCount === 0) {
+    //   selection.addRange(document.createRange())
+    //   //@ts-ignore
+    //   selection.getRangeAt(0).collapse(activeElement, 1)
+    // }
+
+    // const range = selection.getRangeAt(0)
+    // range.collapse(false)
+
+    // // Insert reply
+    // range.insertNode(replyNode)
+
+    // selection = document.getSelection()
+    // // Move the cursor to the end
+    // selection.collapse(replyNode, replyNode.length)
   }
-  restoreCursor()
+  // restoreCursor()
 }
 
-const completeText = async (prompt) => {
-  streamCompletion(prompt)
+const completeText = async (prompt, completionType) => {
+
+  if (completionType === "completion") {
+    streamCompletion(prompt)
+  } else {
+    console.log("Running basic completion");
+    chrome.runtime.sendMessage(
+      {
+        type: "basic_completion",
+        prompt: prompt,
+      },
+      function (response) {
+        if (response["error"]) {
+          console.log(response["error"]);
+          // mediumStatusUpdate("error");
+        } else {
+          console.log("Response received successfully");
+          const completionText = response.choices[0].text
+          console.log("Basic Completion text: ", completionText);
+          updateDOMWithCompletion(completionText);
+        }
+      }
+    );
+  }
 }
 
 document.addEventListener("keydown", async (event) => {
@@ -118,6 +165,9 @@ document.addEventListener("keydown", async (event) => {
       (event.key === "." || event.key === ">")) ||
     (event.key === "Enter" && event.metaKey)
   ) {
+    // if (
+    //   (event.metaKey && event.key === "m")
+    // ) {
     // Prevent the default action
     event.preventDefault()
 
@@ -127,19 +177,33 @@ document.addEventListener("keydown", async (event) => {
     console.log("About to run a completion on website: ", domain)
 
     let activeElement = document.activeElement
-    let prompt = ""
+    let prompt;
+    // If there's an active text input
     if (
-      activeElement instanceof HTMLInputElement ||
-      activeElement instanceof HTMLTextAreaElement
+      activeElement &&
+      (activeElement.isContentEditable ||
+        activeElement.nodeName.toUpperCase() === "TEXTAREA" ||
+        activeElement.nodeName.toUpperCase() === "INPUT")
     ) {
-      // Use the value property for input and textarea elements
-      prompt = activeElement.value
-    } else if (activeElement.hasAttribute("contenteditable")) {
-      // Use the innerHTML property for elements with contenteditable attribute
-      prompt = activeElement.innerHTML
+      // Use selected text or all text in the input
+      prompt =
+        document.getSelection().toString().trim() ||
+        activeElement.textContent.trim();
+    } else {
+      // If no active text input use any selected text on page
+      prompt = document.getSelection().toString().trim();
     }
 
-    console.log("Prompt: ", prompt)
-    completeText(prompt)
+    console.log("Prompt: ", prompt);
+  
+    if (!prompt) {
+      alert("No text in active element.");
+      return;
+    }
+
+    const completionType = activeElement.isContentEditable ? "basic_completion" : "completion";
+    console.log("CompletionType: ", completionType);
+    completeText(prompt, completionType)
+    
   }
 })
