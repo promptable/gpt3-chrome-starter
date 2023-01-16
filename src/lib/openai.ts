@@ -70,6 +70,6 @@ export const streamCompletion = async (args: {
         obj.choices?.[0].text
       )
     },
-    onFinish: () => {}
+    onFinish: onClose
   })
 }

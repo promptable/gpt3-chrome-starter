@@ -83,7 +83,7 @@ const PlasmoOverlay = () => {
     return () => {
       removeEventListener("keydown", handleToggleOverlay)
     }
-  }, [prompt, show])
+  }, [prompt, show, loading])
 
   const handleRun = async (p: string) => {
     if (loading) {
